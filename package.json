@@ -1,0 +1,35 @@
+{
+  "name": "anbl-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "import-data": "node scripts/importCitations.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zipsar-Team7/anbl-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/zipsar-Team7/anbl-backend/issues"
+  },
+  "homepage": "https://github.com/zipsar-Team7/anbl-backend#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "mongoose": "^9.5.0",
+    "morgan": "^1.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

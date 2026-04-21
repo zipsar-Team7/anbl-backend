@@ -1,0 +1,5 @@
+
+admin
+anbladmin
+
+mongodb+srv://admin:anbladmin@main-db.wvgr6za.mongodb.net/?appName=main-db
