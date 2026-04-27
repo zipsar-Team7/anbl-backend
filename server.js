@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import connectDB from './config/db.js';
 import apiRoutes from './routes/index.js';
+import rateLimit from 'express-rate-limit';
 
 // Load environment variables
 dotenv.config();
@@ -15,21 +16,41 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(express.json());
+// Security Middleware
+app.use(express.json({ limit: '10kb' })); // Limit body size to prevent DoS
 app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
 
+// Anti-Scraping Rate Limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  message: {
+    status: 'error',
+    message: 'Too many requests from this IP, please try again after 15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/', limiter);
+
 // Routes
 app.use('/api', apiRoutes);
 
-// Global Error Handler
+// Global Error Handler (Security Optimized)
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
+  // Log the error internally for developers
+  console.error('SERVER_ERROR:', err.message);
+
+  // Send a sanitized message to the user (no stack traces in production)
+  const isDev = process.env.NODE_ENV === 'development';
+  
+  res.status(err.status || 500).json({
     status: 'error',
-    message: err.message || 'Something went wrong on the server.'
+    message: isDev ? err.message : 'A server error occurred. Our team has been notified.',
+    ...(isDev && { stack: err.stack })
   });
 });
 

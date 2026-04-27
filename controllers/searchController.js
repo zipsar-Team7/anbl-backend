@@ -28,9 +28,25 @@ export const searchMaterials = asyncHandler(async (req, res) => {
   const { filters, keyword, page = 1, limit = 10 } = req.body;
   const query = {};
 
+  // 1. Security: Strict Type Validation
+  if (keyword && typeof keyword !== 'string') {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Invalid keyword format. Search must be a string.'
+    });
+  }
+
+  if (filters && (typeof filters !== 'object' || Array.isArray(filters))) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Invalid filter format.'
+    });
+  }
+
   // 1. Keyword Search ($text)
   if (keyword) {
-    query.$text = { $search: keyword };
+    // MongoDB $text search automatically handles tokenization and basic sanitization
+    query.$text = { $search: String(keyword) };
   }
 
   // 2. Categorical Filters (Arrays of strings)
