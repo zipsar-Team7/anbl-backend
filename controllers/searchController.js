@@ -5,14 +5,35 @@ import asyncHandler from '../middleware/asyncHandler.js';
 // @route   GET /api/search/filters
 // @access  Public
 export const getFilters = asyncHandler(async (req, res) => {
-  const fields = ['Type_of_materials', 'Sub_type_of_materials', 'Shape', 'Injury_Model', 'Cell_Type'];
-  const filters = {};
+  const categoricalFields = ['Type_of_materials', 'Sub_type_of_materials', 'Shape', 'Injury_Model', 'Cell_Type'];
+  const filters = {
+    categorical: {},
+    ranges: {}
+  };
 
-  for (const field of fields) {
+  // 1. Get Categorical Unique Values
+  for (const field of categoricalFields) {
     const distinctValues = await Material.distinct(field, {
       [field]: { $ne: null, $not: /^\s*$/ }
     });
-    filters[field] = distinctValues.sort();
+    filters.categorical[field] = distinctValues.sort();
+  }
+
+  // 2. Get Numeric Range Bounds (Global Min/Max)
+  const rangeFields = [
+    { base: 'Size_nm', min: 'Size_nm_min', max: 'Size_nm_max' }
+  ];
+
+  for (const range of rangeFields) {
+    const minVal = await Material.find({ [range.min]: { $ne: null } }).sort({ [range.min]: 1 }).limit(1).select(range.min);
+    const maxVal = await Material.find({ [range.max]: { $ne: null } }).sort({ [range.max]: -1 }).limit(1).select(range.max);
+    
+    if (minVal.length > 0 && maxVal.length > 0) {
+      filters.ranges[range.base] = {
+        min: minVal[0][range.min],
+        max: maxVal[0][range.max]
+      };
+    }
   }
 
   res.status(200).json({
