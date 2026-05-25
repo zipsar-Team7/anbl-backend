@@ -1,0 +1,200 @@
+{
+  "numeric_analysis": {
+    "Core size (nm)": {
+      "total": 1060,
+      "null_count": 11,
+      "not_reported_or_unknown_count": 78,
+      "clean_numeric_count": 920,
+      "range_format_count": 34,
+      "non_standard_text_count": 17,
+      "samples_non_standard": [
+        "8\u00b13",
+        "8\u00b13",
+        "8\u00b13",
+        "8\u00b13",
+        "44.8\u00b13.83"
+      ],
+      "observed_min": 1.9,
+      "observed_max": 45422.0
+    },
+    "PDl": {
+      "total": 1060,
+      "null_count": 0,
+      "not_reported_or_unknown_count": 505,
+      "clean_numeric_count": 546,
+      "range_format_count": 0,
+      "non_standard_text_count": 9,
+      "samples_non_standard": [
+        "0.25 \u00b1 0.03",
+        "low",
+        "low",
+        "low",
+        "low"
+      ],
+      "observed_min": 0.034,
+      "observed_max": 0.54
+    },
+    "Hydrodynamic size in water (nm)": {
+      "total": 1060,
+      "null_count": 11,
+      "not_reported_or_unknown_count": 501,
+      "clean_numeric_count": 548,
+      "range_format_count": 0,
+      "non_standard_text_count": 0,
+      "samples_non_standard": [],
+      "observed_min": 1.9,
+      "observed_max": 543.2
+    },
+    "Surface charge in water (mV)": {
+      "total": 1060,
+      "null_count": 0,
+      "not_reported_or_unknown_count": 283,
+      "clean_numeric_count": 739,
+      "range_format_count": 0,
+      "non_standard_text_count": 38,
+      "samples_non_standard": [
+        "Positive",
+        "Positive",
+        "Positive",
+        "Positive",
+        "Positive"
+      ],
+      "observed_min": -37.1,
+      "observed_max": 54.4
+    },
+    "Exposure dose (\u03bcg/mL)": {
+      "total": 1060,
+      "null_count": 1,
+      "not_reported_or_unknown_count": 20,
+      "clean_numeric_count": 1032,
+      "range_format_count": 0,
+      "non_standard_text_count": 7,
+      "samples_non_standard": [
+        "Not mentioned",
+        "Not mentioned",
+        "VC",
+        "VC",
+        "VC"
+      ],
+      "observed_min": 0.0,
+      "observed_max": 196337.0
+    },
+    "Viability (%)": {
+      "total": 1060,
+      "null_count": 0,
+      "not_reported_or_unknown_count": 29,
+      "clean_numeric_count": 1031,
+      "range_format_count": 0,
+      "non_standard_text_count": 0,
+      "samples_non_standard": [],
+      "observed_min": 0.003,
+      "observed_max": 5908.314
+    }
+  },
+  "categorical_inconsistencies": {
+    "Polymer type": {
+      "lipidplga": [
+        "Lipid- PLGA",
+        "Lipid-PLGA"
+      ],
+      "collagennps": [
+        "Collagen NPs",
+        "Collagen Nps"
+      ]
+    },
+    "Material_2": {
+      "avp(45)peptide": [
+        "AVP (4-5) peptide",
+        "AVP(4-5) peptide"
+      ],
+      "rotigotine": [
+        "Rotigotine",
+        "rotigotine"
+      ],
+      "peptide": [
+        "peptide",
+        "Peptide"
+      ],
+      "curcumin": [
+        "Curcumin",
+        "curcumin"
+      ],
+      "ginsenosiderg3": [
+        "Ginsenoside Rg3",
+        "Ginsenoside-Rg3"
+      ]
+    },
+    "Synthesis method": {
+      "selfassembly": [
+        "Self-assembly",
+        "self assembly"
+      ],
+      "ionicgelationmethod": [
+        "Ionic gelation method",
+        "ionic gelation method"
+      ],
+      "nanoprecipitation": [
+        "nanoprecipitation",
+        "Nanoprecipitation"
+      ],
+      "emulsion/solventevaporation": [
+        "Emulsion/solvent evaporation",
+        "emulsion/solvent evaporation"
+      ],
+      "solventevaporationmethod": [
+        "solvent evaporation method",
+        "Solvent evaporation method"
+      ],
+      "doubleemulsionsolventevaporation": [
+        "double emulsion solvent evaporation",
+        "double emulsion-solventevaporation",
+        "Double emulsion solvent evaporation",
+        "Double emulsion-solvent evaporation"
+      ],
+      "doubleemulsionsolventevaporationmethod": [
+        "double emulsion solvent evaporation method",
+        "Double emulsion solvent evaporation method"
+      ]
+    },
+    "Shape": {
+      "spherical": [
+        "Spherical",
+        "spherical"
+      ]
+    },
+    "Assay": {
+      "mtsassay": [
+        "MTS assay",
+        "MTS Assay"
+      ]
+    },
+    "Cell type": {
+      "cancer": [
+        "Cancer",
+        "cancer"
+      ],
+      "normal": [
+        "Normal",
+        "normal"
+      ],
+      "normalimmortalized": [
+        "Normal - Immortalized",
+        "Normal - immortalized"
+      ],
+      "normalimmortalised": [
+        "Normal - immortalised",
+        "normal - immortalised"
+      ]
+    },
+    "Toxicity": {
+      "mildtoxicity": [
+        "mild toxicity",
+        "Mild Toxicity"
+      ],
+      "unknown": [
+        "Un known",
+        "Unknown"
+      ]
+    }
+  }
+}

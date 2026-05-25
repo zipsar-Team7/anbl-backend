@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import connectDB from './config/db.js';
 import apiRoutes from './routes/index.js';
 import rateLimit from 'express-rate-limit';
+import { exec } from 'child_process';
 
 // Load environment variables
 dotenv.config();
@@ -35,6 +36,8 @@ const limiter = rateLimit({
 });
 
 app.use('/api/', limiter);
+
+
 
 // Routes
 app.use('/api', apiRoutes);

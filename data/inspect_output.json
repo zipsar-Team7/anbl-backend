@@ -1,0 +1,736 @@
+{
+  "shape": [
+    893,
+    28
+  ],
+  "columns": [
+    {
+      "name": "Scale_Coverage",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 9,
+      "samples": [
+        "2D + in vivo",
+        "2D + in vivo",
+        "2D + in vivo",
+        "2D + in vivo",
+        "2D + in vivo",
+        "2D + in vivo",
+        "2D + in vivo",
+        "2D + in vivo",
+        "2D only",
+        "2D only"
+      ],
+      "unique_samples": [
+        "2D + in vivo",
+        "2D only",
+        " in vivo",
+        "2D + 3D",
+        "3D + in vivo",
+        "3D",
+        " 3D",
+        "in vivo",
+        "3D only"
+      ]
+    },
+    {
+      "name": "Meta_Article no",
+      "dtype": "int64",
+      "null_count": 0,
+      "unique_count": 599,
+      "samples": [
+        1,
+        1,
+        2,
+        2,
+        3,
+        3,
+        4,
+        4,
+        5,
+        6
+      ],
+      "unique_samples": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    },
+    {
+      "name": "Meta_doi",
+      "dtype": "object",
+      "null_count": 2,
+      "unique_count": 562,
+      "samples": [
+        "https://www.sciencedirect.com/science/article/pii/S138589472203368X#s0095",
+        "https://www.sciencedirect.com/science/article/pii/S138589472203368X#s0095",
+        "https://jMissingnobiotechnology.biomedcentral.com/articles/10.1186/s12951-025-03224-1",
+        "https://jMissingnobiotechnology.biomedcentral.com/articles/10.1186/s12951-025-03224-1",
+        "https://jMissingnobiotechnology.biomedcentral.com/articles/10.1186/s12951-025-03540-6#Sec12",
+        "https://jMissingnobiotechnology.biomedcentral.com/articles/10.1186/s12951-025-03540-6#Sec12",
+        "https://www.sciencedirect.com/science/article/pii/S0168365925007928#ab0015",
+        "https://www.sciencedirect.com/science/article/pii/S0168365925007928#ab0015",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC7152843/#abstract1",
+        "https://www.sciencedirect.com/science/article/pii/S0142961221005895#abs0010"
+      ],
+      "unique_samples": [
+        "https://www.sciencedirect.com/science/article/pii/S138589472203368X#s0095",
+        "https://jMissingnobiotechnology.biomedcentral.com/articles/10.1186/s12951-025-03224-1",
+        "https://jMissingnobiotechnology.biomedcentral.com/articles/10.1186/s12951-025-03540-6#Sec12",
+        "https://www.sciencedirect.com/science/article/pii/S0168365925007928#ab0015",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC7152843/#abstract1",
+        "https://www.sciencedirect.com/science/article/pii/S0142961221005895#abs0010",
+        "https://www.aging-us.com/article/103125/text",
+        "https://academic.oup.com/rb/article/doi/10.1093/rb/rbae075/7696723#476188028",
+        "https://doi.org/10.1038/s42003-023-04898-9",
+        "https://jMissingnobiotechnology.biomedcentral.com/articles/10.1186/s12951-024-02753-5#Sec2"
+      ]
+    },
+    {
+      "name": "Meta_Title",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 594,
+      "samples": [
+        "Zein nanoparticles loaded with chloroquine improve functional recovery and attenuate neuroinflammation after spinal cord injury",
+        "Zein nanoparticles loaded with chloroquine improve functional recovery and attenuate neuroinflammation after spinal cord injury",
+        "Pectin-zein-IPA nanoparticles promote functional recovery and alleviate neuroinflammation after spinal cord injury",
+        "Pectin-zein-IPA nanoparticles promote functional recovery and alleviate neuroinflammation after spinal cord injury",
+        "Brain targeted lipid nanoaprticles with Hv1 iinhibitors alleiviate neuroinflammation post-ischemic stroke",
+        "Brain targeted lipid nanoaprticles with Hv1 iinhibitors alleiviate neuroinflammation post-ischemic stroke",
+        "A hydrogel-based nanoparticles sustained-release system selectively targeting pro-inflammatory microglia for spinal cord injury repair",
+        "A hydrogel-based nanoparticles sustained-release system selectively targeting pro-inflammatory microglia for spinal cord injury repair",
+        "Proinflammatory Effect of Carbon-Based nanomaterials: In Vitro Study on Stimulation of Inflammasome NLRP3 via Destabilisation of Lysosomes",
+        "Effect of carbon nanonomaterial dimension on the functional activity and degeneration of neurons"
+      ],
+      "unique_samples": [
+        "Zein nanoparticles loaded with chloroquine improve functional recovery and attenuate neuroinflammation after spinal cord injury",
+        "Pectin-zein-IPA nanoparticles promote functional recovery and alleviate neuroinflammation after spinal cord injury",
+        "Brain targeted lipid nanoaprticles with Hv1 iinhibitors alleiviate neuroinflammation post-ischemic stroke",
+        "A hydrogel-based nanoparticles sustained-release system selectively targeting pro-inflammatory microglia for spinal cord injury repair",
+        "Proinflammatory Effect of Carbon-Based nanomaterials: In Vitro Study on Stimulation of Inflammasome NLRP3 via Destabilisation of Lysosomes",
+        "Effect of carbon nanonomaterial dimension on the functional activity and degeneration of neurons",
+        "Valproic acid-labeled chitosan nanoparticles promote recovery of neuronal injury after spinal cord injury ",
+        "Magnetic fibrin nanofiber hydrogel delivering iron oxide magnetic nanoparticles promotes peripheral nerve regeneration",
+        "Nanoparticle\u2011based targeting of microglia improves the neural regeneration enhancing effects of immunosuppression in the zebrafish retina",
+        "Neutrophil membrane-derived nanoparticles protect traumatic brain injury via inhibiting calcium overload and scavenging ROS"
+      ]
+    },
+    {
+      "name": "Meta_Scale",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 5,
+      "samples": [
+        "2D",
+        "in vivo",
+        "2D",
+        "in vivo",
+        "2D",
+        "in vivo",
+        "2D",
+        "in vivo",
+        "2D ",
+        "2D "
+      ],
+      "unique_samples": [
+        "2D",
+        "in vivo",
+        "2D ",
+        " in vivo",
+        "3D"
+      ]
+    },
+    {
+      "name": "MIE-P_M_Type",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 9,
+      "samples": [
+        "Inorganic",
+        "Inorganic",
+        "Organic ",
+        "Organic ",
+        "Hybrid",
+        "Hybrid",
+        "Hybrid",
+        "Hybrid",
+        "Carbon",
+        "Carbon"
+      ],
+      "unique_samples": [
+        "Inorganic",
+        "Organic ",
+        "Hybrid",
+        "Carbon",
+        "Other",
+        "Hydrogel",
+        "Hybrid ",
+        "Inorganic ",
+        "hydrogel"
+      ]
+    },
+    {
+      "name": "MIE-P_Size_nm",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 6,
+      "samples": [
+        "~100-200",
+        "~100-200",
+        ">200",
+        ">200",
+        "~10-100",
+        "~10-100",
+        "~100-200",
+        "~100-200",
+        ">200",
+        "<10"
+      ],
+      "unique_samples": [
+        "~100-200",
+        ">200",
+        "~10-100",
+        "<10",
+        "Missing",
+        "Missing "
+      ]
+    },
+    {
+      "name": "MIE-P_Shape",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 3,
+      "samples": [
+        "Sphere",
+        "Sphere",
+        "Sphere",
+        "Sphere",
+        "Sphere",
+        "Sphere",
+        "Sphere",
+        "Sphere",
+        "Non-sphere",
+        "Sphere"
+      ],
+      "unique_samples": [
+        "Sphere",
+        "Non-sphere",
+        "Missing"
+      ]
+    },
+    {
+      "name": "MIE-P_Agglomeration",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 5,
+      "samples": [
+        "No",
+        "No",
+        "Missing",
+        "Missing",
+        "Missing",
+        "Missing",
+        "No",
+        "No",
+        "Missing",
+        "Yes"
+      ],
+      "unique_samples": [
+        "No",
+        "Missing",
+        "Yes",
+        "Yes ",
+        "missing"
+      ]
+    },
+    {
+      "name": "MIE-P_Zeta_potential",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 4,
+      "samples": [
+        "Negative",
+        "Negative",
+        "Negative ",
+        "Negative ",
+        "Missing",
+        "Missing",
+        "Negative ",
+        "Negative ",
+        "Missing",
+        "Negative "
+      ],
+      "unique_samples": [
+        "Negative",
+        "Negative ",
+        "Missing",
+        "Positive"
+      ]
+    },
+    {
+      "name": "MIE-E_Cell_Type",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 18,
+      "samples": [
+        "Glial",
+        "Missing",
+        "Glial",
+        "Missing",
+        "Glial",
+        "Missing",
+        "Glial",
+        "Missing",
+        "Other",
+        "Other"
+      ],
+      "unique_samples": [
+        "Glial",
+        "Missing",
+        "Other",
+        "Neuronal",
+        "Glial/Neuronal",
+        "Neuronal/Other",
+        "Primary",
+        "Macrophage",
+        "Primary/Other",
+        "Glial/Other"
+      ]
+    },
+    {
+      "name": "MIE-E_NPs_Conc (ug/mL)",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 6,
+      "samples": [
+        "~10-100",
+        "~10-100",
+        "        >500",
+        "        >500",
+        "~100-500",
+        "~100-500",
+        "~1-10",
+        "~1-10",
+        "~10-100",
+        "~10-100"
+      ],
+      "unique_samples": [
+        "~10-100",
+        "        >500",
+        "~100-500",
+        "~1-10",
+        "Missing",
+        ">500"
+      ]
+    },
+    {
+      "name": "MIE-E_Stimulant",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 11,
+      "samples": [
+        "Inflammatory stimuli",
+        "Inflammatory stimuli",
+        "Inflammatory stimuli",
+        "Inflammatory stimuli",
+        "Inflammatory stimuli",
+        "Inflammatory stimuli",
+        "Inflammatory stimuli",
+        "Inflammatory stimuli",
+        "Inflammatory stimuli",
+        "Missing"
+      ],
+      "unique_samples": [
+        "Inflammatory stimuli",
+        "Missing",
+        "Oxidative stress",
+        "Parkinsonism stimuli",
+        "Neurodegenrative peptide",
+        "Growth/DF",
+        "Neurotoxins",
+        "Ischemia models",
+        "Physical stimuli",
+        "NPs stimuli"
+      ]
+    },
+    {
+      "name": "MIE-E_Stimulant_Conc(ug/ml)",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 6,
+      "samples": [
+        "~1-10",
+        "~1-10",
+        "Missing",
+        "Missing",
+        "~1-10",
+        "~1-10",
+        "~1-10",
+        "~1-10",
+        "~1-10",
+        "Missing"
+      ],
+      "unique_samples": [
+        "~1-10",
+        "Missing",
+        "~10-100",
+        "~100-500",
+        ">500",
+        "Yes"
+      ]
+    },
+    {
+      "name": "MIE-E_C_uptake",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 3,
+      "samples": [
+        "Missing",
+        "Missing",
+        "Missing",
+        "Missing",
+        "Missing",
+        "Missing",
+        "Low",
+        "Low",
+        "High",
+        "Missing"
+      ],
+      "unique_samples": [
+        "Missing",
+        "Low",
+        "High"
+      ]
+    },
+    {
+      "name": "KE_Pro",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 5,
+      "samples": [
+        "Low",
+        "Low",
+        "Low",
+        "Low",
+        "Missing",
+        "Low",
+        "Low",
+        "Low",
+        "Low",
+        "Missing"
+      ],
+      "unique_samples": [
+        "Low",
+        "Missing",
+        "High",
+        "LOW",
+        "Low "
+      ]
+    },
+    {
+      "name": "KE_Anti",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 3,
+      "samples": [
+        "High",
+        "High",
+        "High",
+        "High",
+        "Missing",
+        "High",
+        "High",
+        "High",
+        "Low",
+        "Missing"
+      ],
+      "unique_samples": [
+        "High",
+        "Missing",
+        "Low"
+      ]
+    },
+    {
+      "name": "KE_Apoptosis",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 5,
+      "samples": [
+        "Low",
+        "Low",
+        "Low",
+        "Low",
+        "Missing",
+        "Missing",
+        "Low",
+        "Low",
+        "Low",
+        "High"
+      ],
+      "unique_samples": [
+        "Low",
+        "Missing",
+        "High",
+        "Low ",
+        "low"
+      ]
+    },
+    {
+      "name": "MIE-E_Organism",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 5,
+      "samples": [
+        "Missing",
+        "Small rodents",
+        "Missing",
+        "Small rodents",
+        "Missing",
+        "Small rodents",
+        "Missing",
+        "Small rodents",
+        "Missing",
+        "Missing"
+      ],
+      "unique_samples": [
+        "Missing",
+        "Small rodents",
+        "Other vertebrates",
+        "Large mammals",
+        "Fish"
+      ]
+    },
+    {
+      "name": "MIE-E_Sex",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 6,
+      "samples": [
+        "Missing",
+        "Female",
+        "Missing",
+        "Female",
+        "Missing",
+        "Male",
+        "Missing",
+        "Both",
+        "Missing",
+        "Missing"
+      ],
+      "unique_samples": [
+        "Missing",
+        "Female",
+        "Male",
+        "Both",
+        "Other",
+        "Both "
+      ]
+    },
+    {
+      "name": "MIE-E_Age_Weeks",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 4,
+      "samples": [
+        "Missing",
+        "~5-10",
+        "Missing",
+        "Missing",
+        "Missing",
+        "Missing",
+        "Missing",
+        "~5-10",
+        "Missing",
+        "Missing"
+      ],
+      "unique_samples": [
+        "Missing",
+        "~5-10",
+        "~0-5",
+        ">10"
+      ]
+    },
+    {
+      "name": "MIE-E_Weight_g",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 3,
+      "samples": [
+        "Missing",
+        ">50",
+        "Missing",
+        "Missing",
+        "Missing",
+        "Missing",
+        "Missing",
+        "~1-50",
+        "Missing",
+        "Missing"
+      ],
+      "unique_samples": [
+        "Missing",
+        ">50",
+        "~1-50"
+      ]
+    },
+    {
+      "name": "MIE-E_NPs_Dose_ mg/Kg",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 7,
+      "samples": [
+        "Missing",
+        ">10",
+        "Missing",
+        "~10-100",
+        "Missing",
+        ">10",
+        "Missing",
+        ">10",
+        "Missing",
+        "Missing"
+      ],
+      "unique_samples": [
+        "Missing",
+        ">10",
+        "~10-100",
+        ">200",
+        "~0.1-10",
+        "~100-500",
+        ">500"
+      ]
+    },
+    {
+      "name": "MIE-E_Dose_Regimen",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 4,
+      "samples": [
+        "Missing",
+        "Multiple",
+        "Missing",
+        "Multiple",
+        "Missing",
+        "Single",
+        "Missing",
+        "Multiple",
+        "Missing",
+        "Missing"
+      ],
+      "unique_samples": [
+        "Missing",
+        "Multiple",
+        "Single",
+        "Multiple "
+      ]
+    },
+    {
+      "name": "MIE-E_Ad_route",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 6,
+      "samples": [
+        "Missing",
+        "Other",
+        "Missing",
+        "Oral",
+        "Missing",
+        "Intravenous",
+        "Missing",
+        "Other",
+        "Missing",
+        "Missing"
+      ],
+      "unique_samples": [
+        "Missing",
+        "Other",
+        "Oral",
+        "Intravenous",
+        "Intraperitoneal",
+        "Intranasal"
+      ]
+    },
+    {
+      "name": "MIE-E_Injury_Model",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 6,
+      "samples": [
+        "Spinal injury",
+        "Spinal injury",
+        "Brain disease",
+        "Brain disease",
+        "Spinal injury",
+        "Spinal injury",
+        "Spinal injury",
+        "Spinal injury",
+        "Peripheral nerve",
+        "Brain disease"
+      ],
+      "unique_samples": [
+        "Spinal injury",
+        "Brain disease",
+        "Peripheral nerve",
+        "Brain injury",
+        "Missing",
+        "missing"
+      ]
+    },
+    {
+      "name": "AO_Biosafety",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 4,
+      "samples": [
+        "Good",
+        "Good",
+        "Good",
+        "Good",
+        "Missing",
+        "Good",
+        "Good",
+        "Good",
+        "Good",
+        "Bad"
+      ],
+      "unique_samples": [
+        "Good",
+        "Missing",
+        "Bad",
+        "Good "
+      ]
+    },
+    {
+      "name": "AO_Recovery",
+      "dtype": "object",
+      "null_count": 0,
+      "unique_count": 4,
+      "samples": [
+        "Missing",
+        "Good",
+        "Missing",
+        "Good",
+        "Missing",
+        "Good",
+        "Good",
+        "Good",
+        "Good",
+        "Bad"
+      ],
+      "unique_samples": [
+        "Missing",
+        "Good",
+        "Bad",
+        "Low"
+      ]
+    }
+  ]
+}
