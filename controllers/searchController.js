@@ -267,8 +267,8 @@ export const getPolyToxFilters = asyncHandler(async (req, res) => {
 
   filters.ranges = {
     Core_size_nm: {
-      min: coreRange[0]?.minVal !== undefined && coreRange[0]?.minVal !== null ? Math.floor(coreRange[0].minVal) : 0,
-      max: coreRange[0]?.maxVal !== undefined && coreRange[0]?.maxVal !== null ? Math.ceil(coreRange[0].maxVal) : 500
+      min: 1,
+      max: 10000
     },
     PDI: {
       min: pdiRange[0]?.minVal !== undefined && pdiRange[0]?.minVal !== null ? Number(pdiRange[0].minVal.toFixed(2)) : 0,
