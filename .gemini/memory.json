@@ -1,0 +1,54 @@
+{
+  "project": "ANBL Research Backend",
+  "summary": "Node.js/Express backend configured for nanomedicine data search, classification, Poly-Tox prediction, and publication citation mapping.",
+  "tech_stack": {
+    "runtime": "Node.js (v18+ recommended)",
+    "framework": "Express.js (v5)",
+    "database": "MongoDB Atlas via Mongoose (v9)",
+    "security": ["Helmet.js", "Express Rate Limiter", "Morgan logging", "Sanitized Error Masking"]
+  },
+  "branch_status": {
+    "active_branch": "main",
+    "environment": "development"
+  },
+  "database_models": {
+    "Material": {
+      "purpose": "Stores records for the Neuro-Bio-Axis nanoparticle search engine.",
+      "schema": "MIE/KE/AO parameters including size, shape, cell type, concentration, in vivo organism, biosafety, and recovery."
+    },
+    "PolyToxMaterial": {
+      "purpose": "Stores polymer-based nanomaterial records for the Poly-ToxMap search engine.",
+      "schema": "Polymers, Core size, shape, cell details, viability percentages, and toxicity metrics."
+    },
+    "Citation": {
+      "purpose": "Stores publication data for the searchable bibliography on the main portal.",
+      "schema": "Title, authors, journal, year, DOI, and abstract."
+    }
+  },
+  "api_endpoints": {
+    "health": {
+      "GET /api/health": "Checks API server health status."
+    },
+    "search": {
+      "GET /api/search": "Queries nanoparticles based on search text and category filters.",
+      "GET /api/filters": "Retrieves unique values for all scientific filters.",
+      "GET /api/records/:id": "Retrieves a single material detail record by ID."
+    },
+    "predictions": {
+      "POST /api/predict": "Evaluates toxicity/viability metrics based on physiochemical parameters."
+    },
+    "citations": {
+      "GET /api/citations": "Retrieves and searches bibliography publications."
+    }
+  },
+  "recent_updates": [
+    "Implemented Poly-Tox material dataset CSV parser and import script.",
+    "Integrated express-rate-limit to protect database from automated web scraping (100 req / 15 min per IP).",
+    "Enabled helmet.js for securing HTTP headers.",
+    "Created advanced search controller handling intersection filters for both Neuro-Bio-Axis and Poly-ToxMap records."
+  ],
+  "development_notes": {
+    "rate_limiting": "HTTP 429 indicates rate limiter block. Set higher max in server.js if load testing.",
+    "payload_limits": "Payload limits are restricted to 10kb to avoid Denial-of-Service attacks. Large uploads must use seed scripts."
+  }
+}
