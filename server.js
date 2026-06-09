@@ -29,7 +29,10 @@ app.use(cors({
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.warn(`⚠️ CORS Rejected: Origin "${origin}" is not in the allowedOrigins list:`, allowedOrigins);
+      const corsErr = new Error(`Not allowed by CORS: Origin "${origin}" not whitelisted.`);
+      corsErr.status = 403;
+      callback(corsErr);
     }
   },
   credentials: true
