@@ -19,6 +19,14 @@ try {
 
 // Lazy initialization of the ONNX Inference Session
 async function getSession() {
+  if (!ort) {
+    try {
+      ort = await import('onnxruntime-node');
+    } catch (err) {
+      console.error('❌ Failed to dynamically import onnxruntime-node:', err.message);
+      throw new Error('ONNX Runtime native binary failed to load on the server. Please check environment compatibility.');
+    }
+  }
   if (!session) {
     if (!fs.existsSync(MODEL_PATH)) {
       throw new Error(`Model binary not found at ${MODEL_PATH}. Please ensure you have copied polytox_model.onnx to the model_assets folder.`);
