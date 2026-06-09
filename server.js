@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json({ limit: '10kb' })); // Limit body size to prevent DoS
 
 // Enhanced CORS Configuration for Production
-const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : ['http://localhost:5173', 'http://localhost:3000'];
+const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4173'];
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
