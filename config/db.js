@@ -106,8 +106,12 @@ const diagnoseConnection = async () => {
 };
 
 const connectDB = async () => {
-  // Run network diagnostics first
-  await diagnoseConnection();
+  // Run network diagnostics only in development
+  if (process.env.NODE_ENV === 'development') {
+    await diagnoseConnection();
+  } else {
+    console.log('🔗 Connecting to Database...');
+  }
 
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI);

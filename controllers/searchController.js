@@ -2,10 +2,28 @@ import Material from '../models/Material.js';
 import PolyToxMaterial from '../models/PolyToxMaterial.js';
 import asyncHandler from '../middleware/asyncHandler.js';
 
+// Simple In-Memory Cache for expensive metadata queries
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+let filtersCache = {
+  standard: { data: null, lastUpdated: 0 },
+  polytox: { data: null, lastUpdated: 0 }
+};
+
 // @desc    Get unique values for frontend filters
 // @route   GET /api/search/filters
 // @access  Public
 export const getFilters = asyncHandler(async (req, res) => {
+  const now = Date.now();
+  
+  // Return cached data if valid
+  if (filtersCache.standard.data && (now - filtersCache.standard.lastUpdated < CACHE_DURATION)) {
+    return res.status(200).json({
+      status: 'success',
+      data: filtersCache.standard.data,
+      fromCache: true
+    });
+  }
+
   const categoricalFields = [
     'Scale_Coverage',
     'MIE_P_M_Type',
@@ -31,6 +49,12 @@ export const getFilters = asyncHandler(async (req, res) => {
       filters.categorical[field] = distinctValues.sort();
     })
   );
+
+  // Update Cache
+  filtersCache.standard = {
+    data: filters,
+    lastUpdated: now
+  };
 
   res.status(200).json({
     status: 'success',
@@ -225,6 +249,17 @@ export const getMaterialById = asyncHandler(async (req, res) => {
 // @route   GET /api/polytox/filters
 // @access  Public
 export const getPolyToxFilters = asyncHandler(async (req, res) => {
+  const now = Date.now();
+
+  // Return cached data if valid
+  if (filtersCache.polytox.data && (now - filtersCache.polytox.lastUpdated < CACHE_DURATION)) {
+    return res.status(200).json({
+      status: 'success',
+      data: filtersCache.polytox.data,
+      fromCache: true
+    });
+  }
+
   const categoricalFields = [
     'Polymers',
     'Polymer_type',
@@ -243,7 +278,8 @@ export const getPolyToxFilters = asyncHandler(async (req, res) => {
     coreRange,
     pdiRange,
     hydroRange,
-    chargeRange
+    chargeRange,
+    ...categoricalResults
   ] = await Promise.all([
     PolyToxMaterial.aggregate([
       { $group: { _id: null, minVal: { $min: "$Core_size_min" }, maxVal: { $max: "$Core_size_max" } } }
@@ -261,9 +297,14 @@ export const getPolyToxFilters = asyncHandler(async (req, res) => {
       const distinctValues = await PolyToxMaterial.distinct(field, {
         [field]: { $ne: null, $not: /^\s*$/ }
       });
-      filters.categorical[field] = distinctValues.sort();
+      return { field, values: distinctValues.sort() };
     })
   ]);
+
+  // Map categorical results back to filters object
+  categoricalResults.forEach(res => {
+    filters.categorical[res.field] = res.values;
+  });
 
   filters.ranges = {
     Core_size_nm: {
@@ -282,6 +323,12 @@ export const getPolyToxFilters = asyncHandler(async (req, res) => {
       min: chargeRange[0]?.minVal !== undefined && chargeRange[0]?.minVal !== null ? Math.floor(chargeRange[0].minVal) : -100,
       max: chargeRange[0]?.maxVal !== undefined && chargeRange[0]?.maxVal !== null ? Math.ceil(chargeRange[0].maxVal) : 100
     }
+  };
+
+  // Update Cache
+  filtersCache.polytox = {
+    data: filters,
+    lastUpdated: now
   };
 
   res.status(200).json({

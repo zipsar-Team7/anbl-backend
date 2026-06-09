@@ -7,6 +7,7 @@ import {
   searchPolyTox,
   getPolyToxById
 } from '../controllers/searchController.js';
+import { predictPolyTox } from '../controllers/predictController.js';
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.get('/records/:id', getMaterialById);
 router.get('/polytox/filters', getPolyToxFilters);
 router.post('/polytox/search', searchPolyTox);
 router.get('/polytox/records/:id', getPolyToxById);
+router.post('/polytox/predict', predictPolyTox);
 
 export default router;
