@@ -248,3 +248,225 @@ export const predictPolyTox = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * Controller to fetch PolyTox model metadata and model comparison table
+ * GET /api/polytox/metadata
+ */
+export const getPolyToxMetadata = async (req, res, next) => {
+  try {
+    if (!metadata) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Model metadata is not loaded on the server.'
+      });
+    }
+    return res.status(200).json({
+      status: 'success',
+      data: metadata
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Controller to generate nanoparticle toxicity optimization recommendations.
+ * Utilizes the Gemini 2.5 Flash API with a rule-based fallback engine.
+ * POST /api/polytox/suggest
+ */
+export const suggestPolyToxOptimization = async (req, res, next) => {
+  try {
+    const { inputs, predictionLabel, confidence, featureImpacts } = req.body;
+
+    if (!inputs || !predictionLabel) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Missing required fields: inputs and predictionLabel are required.'
+      });
+    }
+
+    // If prediction is Biosafe, no optimizations are needed
+    if (predictionLabel.toLowerCase() === 'biosafe') {
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          explanation: 'The nanoparticle formulation is predicted to be biosafe. No optimization is needed.',
+          tweaks: [],
+          generalTips: ['Maintain synthesis conditions to keep stability.'],
+          engine: 'static'
+        }
+      });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (apiKey && apiKey !== 'your_gemini_api_key_here' && apiKey.trim() !== '') {
+      try {
+        console.log('🤖 Querying Gemini Flash API for optimization suggestions...');
+        const prompt = `
+You are an expert Nanomaterials Toxicologist and Formulation Scientist.
+A nanoparticle configuration has been predicted as: ${predictionLabel} (Confidence: ${(confidence * 100).toFixed(1)}%).
+
+Current Nanoparticle Configuration:
+- Synthesis Method: ${inputs.synthesis || 'Unknown'}
+- Polymers used: ${inputs.polymers || 'Unknown'}
+- Polymer Type: ${inputs.polymer_type || 'Unknown'}
+- Functional Group (Material 2): ${inputs.functional_group || 'Unknown'}
+- Core Size: ${inputs.core_size || 'Unknown'} nm
+- Shape: ${inputs.shape || 'Unknown'}
+- PDI: ${inputs.pdi || 'Unknown'}
+- Hydrodynamic Size: ${inputs.hydro_size || 'Unknown'} nm
+- Surface Charge: ${inputs.charge || 'Unknown'} mV
+
+Model Feature Contributions (SHAP Values - positive values increase toxicity risk):
+${(featureImpacts || []).slice(0, 3).map(f => `- ${f.feature}: ${f.shapValue} (Current value: ${f.value})`).join('\n')}
+
+Identify the features causing the toxic prediction (highest positive SHAP values). 
+Suggest at most 3 key parameter tweaks to make this configuration non-toxic ("Biosafe").
+Be extremely brief. Keep the explanation under 2 sentences and each tweak reason under 15 words.
+Return a JSON object conforming EXACTLY to this schema:
+{
+  "explanation": "Scientific reasoning explaining why the nanoparticle is toxic (max 2 sentences).",
+  "tweaks": [
+    {
+      "parameter": "Exact Parameter Name (e.g. Surface charge in water (mV), Polymer type, PDl, Core size (nm))",
+      "currentValue": "Current Value",
+      "recommendedValue": "Recommended Value or Range (scientifically reasonable)",
+      "reason": "Scientific justification (max 15 words)"
+    }
+  ],
+  "generalTips": ["Formulation tip 1", "Formulation tip 2"]
+}
+`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { text: prompt }
+                ]
+              }
+            ],
+            generationConfig: {
+              responseMimeType: "application/json",
+              maxOutputTokens: 600,
+              temperature: 0.2
+            }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Gemini API returned status code ${response.status}`);
+        }
+
+        const resultJson = await response.json();
+        const responseText = resultJson.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (responseText) {
+          const suggestions = JSON.parse(responseText.trim());
+          return res.status(200).json({
+            status: 'success',
+            data: {
+              ...suggestions,
+              engine: 'gemini'
+            }
+          });
+        }
+      } catch (geminiError) {
+        console.error('⚠️ Gemini API error occurred, falling back to rule-based engine:', geminiError.message);
+      }
+    }
+
+    // --- RULE-BASED FALLBACK ENGINE ---
+    console.log('🛡️ Invoking rule-based fallback suggestion engine...');
+    const explanation = `Based on model boundary limits, this nanoparticle is predicted as ${predictionLabel} primarily due to high positive surface charge, polymer toxicity, or size discrepancies.`;
+    const tweaks = [];
+    const generalTips = [
+      'Perform synthesis using nanoprecipitation or microfluidics to secure narrow size distributions.',
+      'Always test stability in physiological media (e.g. PBS, FBS) before in vitro assays.'
+    ];
+
+    // Analyze Surface Charge
+    const chargeVal = parseFloat(inputs.charge);
+    if (!isNaN(chargeVal) && chargeVal > 15) {
+      tweaks.push({
+        parameter: 'Surface charge in water (mV)',
+        currentValue: `${chargeVal} mV`,
+        recommendedValue: '-15 mV to +10 mV',
+        reason: 'High positive surface charges (> +15 mV) interact electrostatically with negatively charged eukaryotic membranes, triggering cellular disruption and toxic pathways. Shield the surface charge using PEG or neutral functional groups.'
+      });
+    }
+
+    // Analyze Polymer Type
+    const polymerTypeLower = String(inputs.polymer_type).toLowerCase();
+    if (polymerTypeLower.includes('pei') || polymerTypeLower.includes('dendrimer') || polymerTypeLower.includes('bpei') || polymerTypeLower.includes('dgl')) {
+      tweaks.push({
+        parameter: 'Polymer type',
+        currentValue: inputs.polymer_type,
+        recommendedValue: 'PEG-PLGA, Chitosan, or PLA-PEG',
+        reason: 'Cationic polymers like branched PEI or high-generation dendrimers exhibit high cytocompatibility issues. Switching to biodegradable aliphatic polyesters (PLGA) or chitosan reduces cytotoxicity while maintaining carrier qualities.'
+      });
+    }
+
+    // Analyze PDI
+    const pdiVal = parseFloat(inputs.pdi);
+    if (!isNaN(pdiVal) && pdiVal > 0.25) {
+      tweaks.push({
+        parameter: 'PDl',
+        currentValue: String(inputs.pdi),
+        recommendedValue: '< 0.20',
+        reason: 'Polydispersity index greater than 0.25 suggests a highly heterogeneous mixture. Large size heterogeneity leads to unstable formulations and irregular cellular uptake. Refine your purification/filtration process.'
+      });
+    }
+
+    // Analyze Core Size
+    const coreVal = parseFloat(inputs.core_size);
+    if (!isNaN(coreVal)) {
+      if (coreVal < 50) {
+        tweaks.push({
+          parameter: 'Core size (nm)',
+          currentValue: `${coreVal} nm`,
+          recommendedValue: '80 nm to 150 nm',
+          reason: 'Extremely small nanoparticles (< 50 nm) can cross unintended cell membranes and localize inside nuclei, causing potential genotoxicity. Target a size above 80 nm for optimal biosafety.'
+        });
+      } else if (coreVal > 250) {
+        tweaks.push({
+          parameter: 'Core size (nm)',
+          currentValue: `${coreVal} nm`,
+          recommendedValue: '80 nm to 150 nm',
+          reason: 'Large core sizes (> 250 nm) trigger rapid phagocytic clearance by macrophages in vivo and can precipitate out of solution, altering local toxicity profiles.'
+        });
+      }
+    }
+
+    // Default tweak if list is empty
+    if (tweaks.length === 0) {
+      tweaks.push({
+        parameter: 'Surface charge in water (mV)',
+        currentValue: inputs.charge !== undefined ? `${inputs.charge} mV` : 'Unknown',
+        recommendedValue: '-10 mV to +5 mV',
+        reason: 'Adding PEG coatings generally lowers the overall surface charge to a neutral range, which shields interactions and significantly improves nanoparticle biosafety.'
+      });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        explanation,
+        tweaks,
+        generalTips,
+        engine: 'fallback'
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
