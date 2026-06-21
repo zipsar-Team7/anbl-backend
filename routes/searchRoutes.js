@@ -12,6 +12,10 @@ import {
   getPolyToxMetadata,
   suggestPolyToxOptimization 
 } from '../controllers/predictController.js';
+import { 
+  predictNeuro,
+  suggestNeuroOptimization 
+} from '../controllers/neuroPredictController.js';
 
 const router = express.Router();
 
@@ -28,6 +32,9 @@ router.post('/polytox/predict', predictPolyTox);
 router.get('/polytox/metadata', getPolyToxMetadata);
 router.post('/polytox/suggest', suggestPolyToxOptimization);
 
+// Routes for the Neuro-Bio-Axis Predictor
+router.post('/neuro/predict', predictNeuro);
+router.post('/neuro/suggest', suggestNeuroOptimization);
 
 export default router;
 
