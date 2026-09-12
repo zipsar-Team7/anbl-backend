@@ -127,6 +127,115 @@ async function getSessions() {
   return { recSession, toxSession };
 }
 
+// Comprehensive normalization and binning across all 21 model input features
+function normalizeAndBinInput(col, val) {
+  if (val === undefined || val === null || String(val).trim() === '' || String(val).toLowerCase() === 'missing') {
+    return 'missing';
+  }
+  
+  let strVal = String(val).trim();
+  
+  // 1. Continuous Numerical Slider Features -> Categorical Bin Ranges
+  const num = Number(strVal);
+  const isNumeric = !isNaN(num) && !strVal.includes('~') && !strVal.includes('<') && !strVal.includes('>');
+
+  if (isNumeric) {
+    switch (col) {
+      case 'MIE-P_Size_nm':
+        if (num < 10) return '<10';
+        if (num <= 100) return '~10-100';
+        if (num <= 200) return '~100-200';
+        return '>200';
+
+      case 'MIE-E_NPs_Conc (ug/mL)':
+      case 'MIE-E_Stimulant_Conc(ug/ml)':
+        if (num <= 10) return '~0-10';
+        if (num <= 100) return '~10-100';
+        return '>100';
+
+      case 'MIE-E_Age_Weeks':
+        if (num <= 5) return '~0-5';
+        if (num <= 10) return '~5-10';
+        return '>10';
+
+      case 'MIE-E_Weight_g':
+        if (num < 20) return '<20';
+        if (num <= 50) return '~20-50';
+        return '>50';
+
+      case 'MIE-E_NPs_Dose_ mg/Kg':
+        if (num < 1) return '<1';
+        if (num <= 10) return '~1-10';
+        return '>10';
+    }
+  }
+
+  // 2. Discrete & Categorical Features -> Case-Insensitive Standardized Labels
+  const lower = strVal.toLowerCase();
+
+  // Binary & Tri-state Flags
+  if (['yes', 'no'].includes(lower)) return lower === 'yes' ? 'Yes' : 'No';
+  if (['positive', 'negative'].includes(lower)) return lower === 'positive' ? 'Positive' : 'Negative';
+  if (['low', 'high'].includes(lower)) return lower === 'low' ? 'Low' : 'High';
+  if (['single', 'multiple'].includes(lower)) return lower === 'single' ? 'Single' : 'Multiple';
+  if (['sphere', 'non-sphere', 'nonsphere'].includes(lower)) return lower === 'sphere' ? 'Sphere' : 'Non-sphere';
+
+  // Material Properties
+  if (col === 'MIE-P_M_Type') {
+    if (lower.includes('inorg')) return 'Inorganic';
+    if (lower.includes('organ')) return 'Organic';
+    if (lower.includes('carbon')) return 'Carbon';
+    if (lower.includes('hybrid')) return 'Hybrid';
+    if (lower.includes('hydrogel')) return 'Hydrogel';
+    return 'Other';
+  }
+
+  // Cell Type
+  if (col === 'MIE-E_Cell_Type') {
+    if (lower.includes('glia') || lower.includes('astro') || lower.includes('microglia')) return 'Glial';
+    if (lower.includes('neuro')) return 'Neuronal';
+    if (lower.includes('prim')) return 'Primary';
+    if (lower.includes('raw') || lower.includes('264')) return 'RAW 264.7';
+    return 'Other';
+  }
+
+  // Organism
+  if (col === 'MIE-E_Organism') {
+    if (lower.includes('rodent') || lower.includes('mouse') || lower.includes('rat')) return 'Small rodents';
+    if (lower.includes('mammal') || lower.includes('pig') || lower.includes('dog') || lower.includes('primate')) return 'Large mammals';
+    if (lower.includes('fish') || lower.includes('zebra')) return 'Fish';
+    return 'Other vertebrates';
+  }
+
+  // Sex
+  if (col === 'MIE-E_Sex') {
+    if (lower.startsWith('fem')) return 'Female';
+    if (lower.startsWith('mal')) return 'Male';
+    if (lower.includes('both')) return 'Both';
+    return 'Other';
+  }
+
+  // Admin Route
+  if (col === 'MIE-E_Ad_route') {
+    if (lower.includes('intraven') || lower === 'iv') return 'Intravenous';
+    if (lower.includes('intraperiton') || lower === 'ip') return 'Intraperitoneal';
+    if (lower.includes('intranasal') || lower === 'in') return 'Intranasal';
+    if (lower.includes('oral')) return 'Oral';
+    return 'Other';
+  }
+
+  // Injury Model
+  if (col === 'MIE-E_Injury_Model') {
+    if (lower.includes('spinal') || lower.includes('sci')) return 'Spinal injury';
+    if (lower.includes('brain inj') || lower.includes('tbi')) return 'Brain injury';
+    if (lower.includes('periph') || lower.includes('nerve')) return 'Peripheral nerve';
+    if (lower.includes('disease') || lower.includes('alzheimer') || lower.includes('parkinson')) return 'Brain disease';
+    return 'Other';
+  }
+
+  return strVal;
+}
+
 // Transform input payload into ONNX expected Tensors
 function prepareOnnxInputs(session, inputs, numericCols) {
   const expectedInputs = session.inputNames;
@@ -151,12 +260,14 @@ function prepareOnnxInputs(session, inputs, numericCols) {
       }
       feeds[sanitizedCol] = new ort.Tensor('float32', Float32Array.from([isNaN(val) ? 0.0 : val]), [1, 1]);
     } else {
-      const val = rawVal !== undefined && rawVal !== null ? String(rawVal).trim() : 'missing';
+      let val = rawVal !== undefined && rawVal !== null ? String(rawVal).trim() : 'missing';
+      val = normalizeAndBinInput(col, val);
       feeds[sanitizedCol] = new ort.Tensor('string', [val], [1, 1]);
     }
   }
   return feeds;
 }
+
 
 /**
  * Controller to predict Recovery and Biosafety/Toxicity simultaneously
@@ -185,29 +296,34 @@ export const predictNeuro = async (req, res, next) => {
     // 1. Recovery Prediction
     const recFeeds = prepareOnnxInputs(sessions.recSession, inputs, recMeta.numeric_cols);
     const recResults = await sessions.recSession.run(recFeeds);
-    const recClassIdx = Number(recResults[sessions.recSession.outputNames[0]].data[0]);
     const recProbs = Array.from(recResults[sessions.recSession.outputNames[1]].data);
+    const recConf = Math.max(...recProbs);
+    const recClassIdx = recProbs.indexOf(recConf);
     const recLabel = recMeta.classes[recClassIdx];
-    const recConf = recProbs[recClassIdx];
 
     // 2. Toxicity Prediction
     const toxFeeds = prepareOnnxInputs(sessions.toxSession, inputs, toxMeta.numeric_cols);
     const toxResults = await sessions.toxSession.run(toxFeeds);
-    const toxClassIdx = Number(toxResults[sessions.toxSession.outputNames[0]].data[0]);
     const toxProbs = Array.from(toxResults[sessions.toxSession.outputNames[1]].data);
+    const toxConf = Math.max(...toxProbs);
+    const toxClassIdx = toxProbs.indexOf(toxConf);
     const toxLabel = toxMeta.classes[toxClassIdx];
-    const toxConf = toxProbs[toxClassIdx];
+
 
     return res.status(200).json({
       status: 'success',
       data: {
         recovery: {
           prediction: recLabel,
-          confidence: parseFloat(recConf.toFixed(4))
+          confidence: parseFloat(recConf.toFixed(4)),
+          probGood: parseFloat((recProbs[1] || 0).toFixed(4)),
+          probBad: parseFloat((recProbs[0] || 0).toFixed(4))
         },
         toxicity: {
           prediction: toxLabel,
-          confidence: parseFloat(toxConf.toFixed(4))
+          confidence: parseFloat(toxConf.toFixed(4)),
+          probGood: parseFloat((toxProbs[1] || 0).toFixed(4)),
+          probBad: parseFloat((toxProbs[0] || 0).toFixed(4))
         }
       }
     });
@@ -224,7 +340,7 @@ export const predictNeuro = async (req, res, next) => {
  */
 export const suggestNeuroOptimization = async (req, res, next) => {
   try {
-    const { inputs, recoveryPrediction, toxicityPrediction, recoveryConfidence, toxicityConfidence } = req.body;
+    const { inputs, recoveryPrediction, toxicityPrediction, recoveryConfidence, toxicityConfidence, toxStatus, recStatus } = req.body;
 
     if (!inputs || !recoveryPrediction || !toxicityPrediction) {
       return res.status(400).json({
@@ -233,14 +349,28 @@ export const suggestNeuroOptimization = async (req, res, next) => {
       });
     }
 
-    // If both targets are Good (Safe and high recovery), no optimizations are needed
-    if (toxicityPrediction.toLowerCase() === 'good' && recoveryPrediction.toLowerCase() === 'good') {
+    // Determine numerical scores / confidence
+    const toxConfNum = typeof toxicityConfidence === 'number' ? toxicityConfidence : parseFloat(toxicityConfidence) || 0;
+    const recConfNum = typeof recoveryConfidence === 'number' ? recoveryConfidence : parseFloat(recoveryConfidence) || 0;
+    const toxProb = toxConfNum <= 1 ? toxConfNum : toxConfNum / 100;
+    const recProb = recConfNum <= 1 ? recConfNum : recConfNum / 100;
+
+    // Check if formulation is genuinely Safe (Biosafety >= 60%) AND High Recovery (>= 60%)
+    const isToxSafe = (toxicityPrediction === 'SAFE' || toxicityPrediction.toLowerCase() === 'good') && 
+                      toxStatus !== 'warning' && toxStatus !== 'danger' && 
+                      (toxConfNum === 0 || toxProb >= 0.60);
+
+    const isRecSafe = (recoveryPrediction === 'High Recovery' || recoveryPrediction.toLowerCase() === 'good') && 
+                      recStatus !== 'warning' && recStatus !== 'danger' && 
+                      (recConfNum === 0 || recProb >= 0.60);
+
+    if (isToxSafe && isRecSafe) {
       return res.status(200).json({
         status: 'success',
         data: {
-          explanation: 'The nanoparticle formulation is predicted to be biosafe and support therapeutic recovery. No optimization is needed.',
+          explanation: 'The nanoparticle formulation is predicted to be biosafe and support high therapeutic recovery. No optimization is needed.',
           tweaks: [],
-          generalTips: ['Maintain synthesis conditions to keep stability.'],
+          generalTips: ['Maintain current synthesis and formulation parameters to preserve batch stability.'],
           engine: 'static'
         }
       });
@@ -254,8 +384,8 @@ export const suggestNeuroOptimization = async (req, res, next) => {
         const prompt = `
 You are an expert Nanomaterials Neuro-Toxicologist and Drug Delivery Formulation Scientist.
 A nanoparticle configuration has been evaluated with dual-target predictive outcomes:
-- Biosafety/Toxicity: ${toxicityPrediction} (Confidence: ${(toxicityConfidence * 100).toFixed(1)}%)
-- Therapeutic Recovery: ${recoveryPrediction} (Confidence: ${(recoveryConfidence * 100).toFixed(1)}%)
+- Biosafety/Toxicity: ${toxicityPrediction} (${(toxProb * 100).toFixed(1)}% Biosafety probability)
+- Therapeutic Recovery: ${recoveryPrediction} (${(recProb * 100).toFixed(1)}% Positive Recovery probability)
 
 Current Nanoparticle Configuration:
 - Material Type: ${inputs.MIE_P_M_Type || 'Unknown'}
@@ -275,8 +405,8 @@ Current Nanoparticle Configuration:
 - Anti-inflammatory level: ${inputs.KE_Anti || 'Unknown'}
 - Apoptosis level: ${inputs.KE_Apoptosis || 'Unknown'}
 
-Identify parameters triggering toxicity (like high cationic zeta charge or high concentrations) or causing poor recovery.
-Suggest at most 3 key parameter tweaks to make this configuration safe and recovery-supporting ("Good").
+Identify parameters triggering toxicity (such as cationic zeta potential, size mismatch, excessive concentration, high apoptosis/pro-inflammatory markers) or causing poor/moderate recovery.
+Suggest at most 3 key parameter tweaks to optimize this formulation to achieve SAFE biosafety (>= 60%) and High Recovery (>= 60%).
 Be extremely brief. Keep the explanation under 2 sentences and each tweak reason under 15 words.
 Return a JSON object conforming EXACTLY to this schema:
 {
@@ -338,13 +468,17 @@ Return a JSON object conforming EXACTLY to this schema:
 
     // --- RULE-BASED FALLBACK ENGINE ---
     console.log('🛡️ Invoking rule-based fallback suggestion engine for Neuro...');
-    let explanation = 'All formulation parameters are optimized. The nanoparticle exhibits good biosafety and therapeutic recovery potential.';
-    if (toxicityPrediction === 'Bad' && recoveryPrediction === 'Bad') {
-      explanation = 'The formulation is predicted to trigger high toxicity responses while showing poor recovery. This is primarily caused by cationic zeta potential, size mismatch, or excessive concentration.';
-    } else if (toxicityPrediction === 'Bad') {
-      explanation = 'The nanoparticle configuration is predicted to trigger hazard/toxicity responses. Adjusting surface charge, core size, or concentration is recommended.';
-    } else if (recoveryPrediction === 'Bad') {
-      explanation = 'The formulation is predicted to have poor neural recovery outcomes. Consider using targeted cell stimulants, or modifying the polymer matrix to improve neural interface integration.';
+    
+    let explanation = 'The nanoparticle formulation requires parameter tuning to improve biosafety and neural recovery.';
+    const toxProblem = !isToxSafe;
+    const recProblem = !isRecSafe;
+
+    if (toxProblem && recProblem) {
+      explanation = `The formulation is predicted as ${toxicityPrediction} with ${recoveryPrediction}. Parameter optimization of charge, concentration, and key biological signaling is required to mitigate cytotoxicity and stimulate tissue repair.`;
+    } else if (toxProblem) {
+      explanation = `The nanoparticle formulation is predicted as ${toxicityPrediction}. Adjusting surface charge, core size, or concentration is recommended to eliminate toxicity hazards.`;
+    } else if (recProblem) {
+      explanation = `The formulation is predicted to have ${recoveryPrediction}. Optimizing stimulant concentration, particle dimensions, and cellular uptake kinetics will enhance therapeutic recovery.`;
     }
 
     const tweaks = [];
@@ -355,63 +489,93 @@ Return a JSON object conforming EXACTLY to this schema:
     ];
 
     // 1. Check Zeta Potential
-    if (inputs.MIE_P_Zeta_potential === 'Positive') {
+    if (String(inputs.MIE_P_Zeta_potential).toLowerCase().includes('positiv')) {
       tweaks.push({
         parameter: 'Zeta Potential',
         currentValue: 'Positive',
         recommendedValue: 'Negative or Neutral',
-        reason: 'Cationic surfaces cause severe electrostatic cell membrane disruption in glial cells.'
+        reason: 'Cationic surfaces cause severe electrostatic cell membrane disruption in neural/glial cells.'
       });
     }
 
     // 2. Check Core Size
     const size = Number(inputs.MIE_P_Size_nm);
     if (!isNaN(size) && size > 0) {
-      if (size < 50) {
+      if (size < 60) {
         tweaks.push({
           parameter: 'Core Size',
           currentValue: `${size} nm`,
           recommendedValue: '80 nm to 150 nm',
-          reason: 'Ultrasmall particles (< 50 nm) cause intracellular damage and cross nuclear envelopes.'
+          reason: 'Ultrasmall particles (< 60 nm) cause intracellular damage and cross nuclear envelopes.'
         });
-      } else if (size > 250) {
+      } else if (size > 180) {
         tweaks.push({
           parameter: 'Core Size',
           currentValue: `${size} nm`,
           recommendedValue: '80 nm to 150 nm',
-          reason: 'Nanoparticles larger than 250 nm precipitate quickly and trigger macro-phagocytosis.'
+          reason: 'Nanoparticles larger than 180 nm precipitate quickly and trigger macro-phagocytosis.'
         });
       }
     }
 
     // 3. Check NPs Concentration
     const conc = Number(inputs.MIE_E_NPs_Conc);
-    if (!isNaN(conc) && conc > 150) {
+    if (!isNaN(conc) && conc > 50) {
       tweaks.push({
         parameter: 'NPs Concentration',
         currentValue: `${conc} ug/mL`,
-        recommendedValue: '20 ug/mL to 80 ug/mL',
-        reason: 'Concentrations exceeding 150 ug/mL lead to cytotoxic overload in astrocytes.'
+        recommendedValue: '10 ug/mL to 40 ug/mL',
+        reason: 'Concentrations exceeding 50 ug/mL lead to cytotoxic overload in astrocytes.'
       });
     }
 
     // 4. Check Stimulant Concentration
     const stimConc = Number(inputs.MIE_E_Stimulant_Conc);
-    if (!isNaN(stimConc) && stimConc > 100) {
+    if (!isNaN(stimConc) && stimConc > 50) {
       tweaks.push({
         parameter: 'Stimulant Concentration',
         currentValue: `${stimConc} ug/mL`,
-        recommendedValue: '< 50 ug/mL',
+        recommendedValue: '10 ug/mL to 30 ug/mL',
         reason: 'High stimulant concentrations trigger excessive inflammatory cytokine cascades.'
       });
     }
 
-    // Default tweak if list is empty but prediction is bad
-    if (tweaks.length === 0 && (toxicityPrediction === 'Bad' || recoveryPrediction === 'Bad')) {
+    // 5. Check Apoptosis / Cytotoxicity
+    if (String(inputs.KE_Apoptosis).toLowerCase().includes('high') && tweaks.length < 3) {
       tweaks.push({
-        parameter: 'Cellular Uptake',
-        currentValue: inputs.MIE_E_C_uptake || 'Unknown',
-        recommendedValue: 'Low (Controlled)',
+        parameter: 'Apoptosis Control',
+        currentValue: 'High',
+        recommendedValue: 'Low (Co-administer antioxidants or PEGylate)',
+        reason: 'High apoptosis index indicates acute cellular death in neural populations.'
+      });
+    }
+
+    // 6. Check Pro-inflammatory signaling
+    if (String(inputs.KE_Pro).toLowerCase().includes('high') && tweaks.length < 3) {
+      tweaks.push({
+        parameter: 'Pro-inflammatory Signaling',
+        currentValue: 'High',
+        recommendedValue: 'Low to Moderate',
+        reason: 'Excessive pro-inflammatory cytokines impede neural axonal regeneration.'
+      });
+    }
+
+    // 7. Check Shape
+    if (inputs.MIE_P_Shape && !String(inputs.MIE_P_Shape).toLowerCase().includes('spher') && tweaks.length < 3) {
+      tweaks.push({
+        parameter: 'Shape',
+        currentValue: inputs.MIE_P_Shape,
+        recommendedValue: 'Spherical',
+        reason: 'Spherical geometries minimize membrane shearing forces during neuronal uptake.'
+      });
+    }
+
+    // Default tweak if list is empty but prediction is bad
+    if (tweaks.length === 0) {
+      tweaks.push({
+        parameter: 'Surface Functionalization',
+        currentValue: inputs.MIE_E_C_uptake || 'Uncoated / Native',
+        recommendedValue: 'PEGylated (Biocompatible coating)',
         reason: 'Control cellular internalization rates via PEGylation to reduce cellular stress.'
       });
     }
@@ -420,7 +584,7 @@ Return a JSON object conforming EXACTLY to this schema:
       status: 'success',
       data: {
         explanation,
-        tweaks,
+        tweaks: tweaks.slice(0, 3),
         generalTips,
         engine: 'fallback'
       }
