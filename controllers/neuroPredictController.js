@@ -127,6 +127,115 @@ async function getSessions() {
   return { recSession, toxSession };
 }
 
+// Comprehensive normalization and binning across all 21 model input features
+function normalizeAndBinInput(col, val) {
+  if (val === undefined || val === null || String(val).trim() === '' || String(val).toLowerCase() === 'missing') {
+    return 'missing';
+  }
+  
+  let strVal = String(val).trim();
+  
+  // 1. Continuous Numerical Slider Features -> Categorical Bin Ranges
+  const num = Number(strVal);
+  const isNumeric = !isNaN(num) && !strVal.includes('~') && !strVal.includes('<') && !strVal.includes('>');
+
+  if (isNumeric) {
+    switch (col) {
+      case 'MIE-P_Size_nm':
+        if (num < 10) return '<10';
+        if (num <= 100) return '~10-100';
+        if (num <= 200) return '~100-200';
+        return '>200';
+
+      case 'MIE-E_NPs_Conc (ug/mL)':
+      case 'MIE-E_Stimulant_Conc(ug/ml)':
+        if (num <= 10) return '~0-10';
+        if (num <= 100) return '~10-100';
+        return '>100';
+
+      case 'MIE-E_Age_Weeks':
+        if (num <= 5) return '~0-5';
+        if (num <= 10) return '~5-10';
+        return '>10';
+
+      case 'MIE-E_Weight_g':
+        if (num < 20) return '<20';
+        if (num <= 50) return '~20-50';
+        return '>50';
+
+      case 'MIE-E_NPs_Dose_ mg/Kg':
+        if (num < 1) return '<1';
+        if (num <= 10) return '~1-10';
+        return '>10';
+    }
+  }
+
+  // 2. Discrete & Categorical Features -> Case-Insensitive Standardized Labels
+  const lower = strVal.toLowerCase();
+
+  // Binary & Tri-state Flags
+  if (['yes', 'no'].includes(lower)) return lower === 'yes' ? 'Yes' : 'No';
+  if (['positive', 'negative'].includes(lower)) return lower === 'positive' ? 'Positive' : 'Negative';
+  if (['low', 'high'].includes(lower)) return lower === 'low' ? 'Low' : 'High';
+  if (['single', 'multiple'].includes(lower)) return lower === 'single' ? 'Single' : 'Multiple';
+  if (['sphere', 'non-sphere', 'nonsphere'].includes(lower)) return lower === 'sphere' ? 'Sphere' : 'Non-sphere';
+
+  // Material Properties
+  if (col === 'MIE-P_M_Type') {
+    if (lower.includes('inorg')) return 'Inorganic';
+    if (lower.includes('organ')) return 'Organic';
+    if (lower.includes('carbon')) return 'Carbon';
+    if (lower.includes('hybrid')) return 'Hybrid';
+    if (lower.includes('hydrogel')) return 'Hydrogel';
+    return 'Other';
+  }
+
+  // Cell Type
+  if (col === 'MIE-E_Cell_Type') {
+    if (lower.includes('glia') || lower.includes('astro') || lower.includes('microglia')) return 'Glial';
+    if (lower.includes('neuro')) return 'Neuronal';
+    if (lower.includes('prim')) return 'Primary';
+    if (lower.includes('raw') || lower.includes('264')) return 'RAW 264.7';
+    return 'Other';
+  }
+
+  // Organism
+  if (col === 'MIE-E_Organism') {
+    if (lower.includes('rodent') || lower.includes('mouse') || lower.includes('rat')) return 'Small rodents';
+    if (lower.includes('mammal') || lower.includes('pig') || lower.includes('dog') || lower.includes('primate')) return 'Large mammals';
+    if (lower.includes('fish') || lower.includes('zebra')) return 'Fish';
+    return 'Other vertebrates';
+  }
+
+  // Sex
+  if (col === 'MIE-E_Sex') {
+    if (lower.startsWith('fem')) return 'Female';
+    if (lower.startsWith('mal')) return 'Male';
+    if (lower.includes('both')) return 'Both';
+    return 'Other';
+  }
+
+  // Admin Route
+  if (col === 'MIE-E_Ad_route') {
+    if (lower.includes('intraven') || lower === 'iv') return 'Intravenous';
+    if (lower.includes('intraperiton') || lower === 'ip') return 'Intraperitoneal';
+    if (lower.includes('intranasal') || lower === 'in') return 'Intranasal';
+    if (lower.includes('oral')) return 'Oral';
+    return 'Other';
+  }
+
+  // Injury Model
+  if (col === 'MIE-E_Injury_Model') {
+    if (lower.includes('spinal') || lower.includes('sci')) return 'Spinal injury';
+    if (lower.includes('brain inj') || lower.includes('tbi')) return 'Brain injury';
+    if (lower.includes('periph') || lower.includes('nerve')) return 'Peripheral nerve';
+    if (lower.includes('disease') || lower.includes('alzheimer') || lower.includes('parkinson')) return 'Brain disease';
+    return 'Other';
+  }
+
+  return strVal;
+}
+
 // Transform input payload into ONNX expected Tensors
 function prepareOnnxInputs(session, inputs, numericCols) {
   const expectedInputs = session.inputNames;
@@ -151,12 +260,14 @@ function prepareOnnxInputs(session, inputs, numericCols) {
       }
       feeds[sanitizedCol] = new ort.Tensor('float32', Float32Array.from([isNaN(val) ? 0.0 : val]), [1, 1]);
     } else {
-      const val = rawVal !== undefined && rawVal !== null ? String(rawVal).trim() : 'missing';
+      let val = rawVal !== undefined && rawVal !== null ? String(rawVal).trim() : 'missing';
+      val = normalizeAndBinInput(col, val);
       feeds[sanitizedCol] = new ort.Tensor('string', [val], [1, 1]);
     }
   }
   return feeds;
 }
+
 
 /**
  * Controller to predict Recovery and Biosafety/Toxicity simultaneously
@@ -185,29 +296,34 @@ export const predictNeuro = async (req, res, next) => {
     // 1. Recovery Prediction
     const recFeeds = prepareOnnxInputs(sessions.recSession, inputs, recMeta.numeric_cols);
     const recResults = await sessions.recSession.run(recFeeds);
-    const recClassIdx = Number(recResults[sessions.recSession.outputNames[0]].data[0]);
     const recProbs = Array.from(recResults[sessions.recSession.outputNames[1]].data);
+    const recConf = Math.max(...recProbs);
+    const recClassIdx = recProbs.indexOf(recConf);
     const recLabel = recMeta.classes[recClassIdx];
-    const recConf = recProbs[recClassIdx];
 
     // 2. Toxicity Prediction
     const toxFeeds = prepareOnnxInputs(sessions.toxSession, inputs, toxMeta.numeric_cols);
     const toxResults = await sessions.toxSession.run(toxFeeds);
-    const toxClassIdx = Number(toxResults[sessions.toxSession.outputNames[0]].data[0]);
     const toxProbs = Array.from(toxResults[sessions.toxSession.outputNames[1]].data);
+    const toxConf = Math.max(...toxProbs);
+    const toxClassIdx = toxProbs.indexOf(toxConf);
     const toxLabel = toxMeta.classes[toxClassIdx];
-    const toxConf = toxProbs[toxClassIdx];
+
 
     return res.status(200).json({
       status: 'success',
       data: {
         recovery: {
           prediction: recLabel,
-          confidence: parseFloat(recConf.toFixed(4))
+          confidence: parseFloat(recConf.toFixed(4)),
+          probGood: parseFloat((recProbs[1] || 0).toFixed(4)),
+          probBad: parseFloat((recProbs[0] || 0).toFixed(4))
         },
         toxicity: {
           prediction: toxLabel,
-          confidence: parseFloat(toxConf.toFixed(4))
+          confidence: parseFloat(toxConf.toFixed(4)),
+          probGood: parseFloat((toxProbs[1] || 0).toFixed(4)),
+          probBad: parseFloat((toxProbs[0] || 0).toFixed(4))
         }
       }
     });
